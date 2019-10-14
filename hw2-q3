@@ -36,6 +36,18 @@ ind01 = find(decision==0 & label==1); p01 = length(ind01)/Nc(2); % probability o
 ind11 = find(decision==1 & label==1); p11 = length(ind11)/Nc(2); % probability of true positive
 p = [p10,p01]*Nc'/N; % probability of error, empirically estimated
 
+figure(1), % class 0 circle, class 1 +, correct green, incorrect red
+plot(x(1,ind00),x(2,ind00),'og'); hold on,
+plot(x(1,ind10),x(2,ind10),'or'); hold on,
+plot(x(1,ind01),x(2,ind01),'+r'); hold on,
+plot(x(1,ind11),x(2,ind11),'+g'); hold on,
+axis equal,
+
+% including the contour at level 0 which is the decision boundary
+legend('Correct decisions for data from Class 1','Wrong decisions for data from Class 1','Wrong decisions for data from Class 2','Correct decisions for data from Class 2' ), 
+title('Data and their classifier decisions versus true labels'),
+xlabel('x_1'), ylabel('x_2'), 
+
 % Question3 starts from here
 Sb = (mu(:,1)-mu(:,2))*(mu(:,1)-mu(:,2))';
 Sw = Sigma(:,:,1) + Sigma(:,:,2);
