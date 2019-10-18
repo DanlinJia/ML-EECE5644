@@ -4,37 +4,41 @@ measurement = -1;
 map = 1;
 N = 100;
 x = 4 * rand(2, N) - 2;
-horizontalGrid = linspace(floor(min(x(1,:))),ceil(max(x(1,:))),101);
-verticalGrid = linspace(floor(min(x(2,:))),ceil(max(x(2,:))),91);
-[h,v] = meshgrid(horizontalGrid,verticalGrid);
 
 for i=1:1
     reference=zeros(2,i);
     pair(1) = rand();
     pair(2) = rand();
-    testPoint = generateTestLocation(pair, sigma_x, sigma_y);
+    horizontalGrid = linspace(floor(min(x(1,:))),ceil(max(x(1,:))),101);
+    verticalGrid = linspace(floor(min(x(2,:))),ceil(max(x(2,:))),91);
+    [h,v] = meshgrid(horizontalGrid,verticalGrid);
     for k=1:i
         reference(:,k) = generateDataOnCircle();
-        dTi = norm([h(:)';v(:)'] - reference(:,k))/N;
-        testDistance = norm(pair - reference(:,k));
-        E = evalGaussian(testDistance, dTi, 0.1);
+        dTi = norm(pair - reference(:,k));
         hv = [h(:)';v(:)'];
         [a,b] = size(hv) ;
-        C =zeros(a,b);
+        C =zeros(1,b);
         for v= 1:b
-            C(:,v) = generateTestLocation(hv(:,v),sigma_x, sigma_y);   
+            C(:,v) = norm(hv(:,v)-reference(:,k));  
         end
-        %P = generateTestLocation(, sigma_x, sigma_y);
-        map = map * E * C
+        discriminantScoreGridValues = log(evalGaussian(C,dTi, 0.1));
+
+%         testDistance = norm(pair - reference(:,k));
+%         E = evalGaussian(testDistance, dTi, 0.1);
+%         %P = generateTestLocation(, sigma_x, sigma_y);
+%         map = map * E * C
     end
-    discriminantScoreGridValues = map;
+
     minDSGV = -2;
     maxDSGV = 2;
     discriminantScoreGrid = reshape(discriminantScoreGridValues,91,101);
-    figure(i),
-    plot(pair(1), pair(2), 'gx'),
-    plot(reference(:,1), pair(:,2), 'ro'),
-    contour(horizontalGrid,verticalGrid,discriminantScoreGrid,[minDSGV*[0.9,0.6,0.3],0,[0.3,0.6,0.9]*maxDSGV]);
+    figure(i), contour(horizontalGrid,verticalGrid,discriminantScoreGrid,[minDSGV*[0.9,0.6,0.3],0,[0.3,0.6,0.9]*maxDSGV]),
+     plot(pair(1), pair(2), 'gx'),
+    plot(reference(1), reference(2), 'ro'),
+    legend('TruePoint','Reference'), 
+    title('TruePoint and References'),
+    xlabel('x'), ylabel('y'), 
+    
 end
 
 
@@ -47,7 +51,7 @@ k=v;
 end
 
 
-function p = generateTestLocation(pair, sigma_x, sigma_y)
+function p = evalPrior(pair, sigma_x, sigma_y)
 % Generate a location based on sigmas
 V(:,:,1) =[sigma_x^2, 0; 0, sigma_y^2];
 C = (2*pi*sigma_x*sigma_y)^(-1);
