@@ -1,61 +1,61 @@
 sigma_x = 0.25; sigma_y = 0.25;
 pair = zeros(2,1);
 measurement = -1;
-map = 1;
-N = 100;
-x = 4 * rand(2, N) - 2;
+map = 0;
+horizontalGrid = linspace(floor(-2),ceil(2),101);
+verticalGrid = linspace(floor(-2),ceil(2),91);
+[h,v] = meshgrid(horizontalGrid,verticalGrid);
+hv = [h(:)';v(:)'];
+[a,b] = size(hv) ; 
 
-for i=1:1
+for i=1:4
     reference=zeros(2,i);
     pair(1) = rand();
     pair(2) = rand();
-    horizontalGrid = linspace(floor(min(x(1,:))),ceil(max(x(1,:))),101);
-    verticalGrid = linspace(floor(min(x(2,:))),ceil(max(x(2,:))),91);
-    [h,v] = meshgrid(horizontalGrid,verticalGrid);
-    for k=1:i
-        reference(:,k) = generateDataOnCircle();
+    reference(:) = generateDataOnCircle(i);
+    for k=1:i   
         dTi = norm(pair - reference(:,k));
-        hv = [h(:)';v(:)'];
-        [a,b] = size(hv) ;
         C =zeros(1,b);
+        E = zeros(1,b);
         for v= 1:b
             C(:,v) = norm(hv(:,v)-reference(:,k));  
+            E(:,v) = evalPrior(hv(:,v),sigma_x, sigma_y );
         end
-        discriminantScoreGridValues = log(evalGaussian(C,dTi, 0.1));
-
-%         testDistance = norm(pair - reference(:,k));
-%         E = evalGaussian(testDistance, dTi, 0.1);
-%         %P = generateTestLocation(, sigma_x, sigma_y);
-%         map = map * E * C
+        map = map + log(evalGaussian(C, dTi, 0.1)) + log(E);
     end
-
     minDSGV = -2;
     maxDSGV = 2;
-    discriminantScoreGrid = reshape(discriminantScoreGridValues,91,101);
-    figure(i), contour(horizontalGrid,verticalGrid,discriminantScoreGrid,[minDSGV*[0.9,0.6,0.3],0,[0.3,0.6,0.9]*maxDSGV]),
-     plot(pair(1), pair(2), 'gx'),
-    plot(reference(1), reference(2), 'ro'),
-    legend('TruePoint','Reference'), 
+    mapGrid = reshape(map,91,101);
+    subplot(2,2,i), 
+    %contour(horizontalGrid,verticalGrid,mapGrid,[minDSGV*[0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1],0,[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]*maxDSGV]); hold on,
+    contour(horizontalGrid,verticalGrid,mapGrid,[minDSGV*[0.9,0.6,0.3],0,[0.3,0.6,0.9]*maxDSGV]); hold on,
+    plot(pair(1), pair(2), 'gx');hold on,
+    plot(reference(1,:), reference(2,:), 'ro');
+    legend("Contour",'TruePoint','Reference'), 
     title('TruePoint and References'),
-    xlabel('x'), ylabel('y'), 
+    xlabel('x'), ylabel('y');
     
 end
 
 
 
-function k=generateDataOnCircle()
-x=rand();
-y=sqrt(1-x^2);
-v(:,1) = [x;y];
+function k=generateDataOnCircle(number)
+v = zeros(2, number);
+t1 = 0;
+for i=1:number
+    x=cos(t1);
+    y=sin(t1);
+    v(:,i) = [x;y];
+    t1 = t1 + 2*pi/number;
+end
 k=v;
 end
-
 
 function p = evalPrior(pair, sigma_x, sigma_y)
 % Generate a location based on sigmas
 V(:,:,1) =[sigma_x^2, 0; 0, sigma_y^2];
 C = (2*pi*sigma_x*sigma_y)^(-1);
-E = -0.5*pair.*inv(V)*pair;
+E = -0.5*pair'*inv(V)*pair;
 p = C*exp(E);
 end
 
