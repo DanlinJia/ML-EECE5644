@@ -7,11 +7,10 @@ verticalGrid = linspace(floor(-2),ceil(2),91);
 [h,v] = meshgrid(horizontalGrid,verticalGrid);
 hv = [h(:)';v(:)'];
 [a,b] = size(hv) ; 
-
+pair(1) = rand();
+pair(2) = rand();
 for i=1:4
     reference=zeros(2,i);
-    pair(1) = rand();
-    pair(2) = rand();
     reference(:) = generateDataOnCircle(i);
     for k=1:i   
         dTi = norm(pair - reference(:,k));
@@ -27,12 +26,11 @@ for i=1:4
     maxDSGV = 2;
     mapGrid = reshape(map,91,101);
     subplot(2,2,i), 
-    %contour(horizontalGrid,verticalGrid,mapGrid,[minDSGV*[0.9,0.8,0.7,0.6,0.5,0.4,0.3,0.2,0.1],0,[0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9]*maxDSGV]); hold on,
-    contour(horizontalGrid,verticalGrid,mapGrid,[minDSGV*[0.9,0.6,0.3],0,[0.3,0.6,0.9]*maxDSGV]); hold on,
+    contour(horizontalGrid,verticalGrid,mapGrid); hold on,
     plot(pair(1), pair(2), 'gx');hold on,
     plot(reference(1,:), reference(2,:), 'ro');
     legend("Contour",'TruePoint','Reference'), 
-    title('TruePoint and References'),
+    title(sprintf('TruePoint and References for K=%f',i)),
     xlabel('x'), ylabel('y');
     
 end
