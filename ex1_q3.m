@@ -27,7 +27,7 @@ input;
 
 
 index=0;
-steps=(-3:0.1:3);
+steps=(-3:1:3);
 percent = zeros(4,length(steps));
 xplot=zeros(1, length(steps));
 for s=steps
