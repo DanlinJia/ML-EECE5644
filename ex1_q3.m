@@ -1,7 +1,7 @@
 N=10;
 x = zeros(1,N);
 sigma=0.1;
-wTrue=[4 0 -2 0];
+wTrue=[1 0 -0.25 0];
 for i=1:N
     x(i)=2*rand()-1;
 end
@@ -22,26 +22,39 @@ for order=1:4
     end
     input(order,:)=a;
 end
-input = [input ]
 lambda=1;
 input;
 
-percent = zeros(4,
-for gamma=
-    result=zeros(1,100);
-    for i=1:100
-        map = @(w)(w)*(w)'/gamma^2+sum(y-w*input/sigma^2);
+
+index=0;
+steps=(-3:0.1:3);
+percent = zeros(4,length(steps));
+xplot=zeros(1, length(steps));
+for s=steps
+    index = index+1;
+    gamma = 10^s;
+    xplot(index) = gamma;
+    l2=zeros(1,10);
+    for i=1:10
+        map = @(w)(w)*(w)'*gamma^(-2)+sum((y-w*input).^2*sigma^(-2));
         x0 = rand(1,4);
-        [w,mval] = fminunc(map,x0);
-        result(:,i) = norm(wTrue-w);
+        [w,mval] = fminsearch(map,x0);
+        l2(:,i) = norm(wTrue-w)^2;
     end
-    
-    percen = 
-    prctile(result,)
+    percent(:,index) = [prctile(l2,0),prctile(l2,25),prctile(l2,75),prctile(l2,100),];
+
 end
 
+
+
 figure(1),
-plot
+plot(xplot,percent(1,:),'g'),hold on,
+plot(xplot,percent(2,:),'r'),hold on,
+plot(xplot,percent(3,:),'y'),hold on,
+plot(xplot,percent(4,:),'b'),hold on,
+legend("0%",'25%','75%','100%'),
+title("Squared L2 with gamma"),%ylim([0,2]);
+xlabel('gamma'), ylabel('L2^2');
 
 
 
