@@ -1,4 +1,3 @@
-
 m(:,1) = [-1;0]; Sigma(:,:,1) = 0.1*[10 -4;-4,5]; % mean and covariance of data pdf conditioned on label 3
 m(:,2) = [1;0]; Sigma(:,:,2) = 0.1*[5 0;0,2]; % mean and covariance of data pdf conditioned on label 2
 m(:,3) = [0;1]; Sigma(:,:,3) = 0.1*eye(2); % mean and covariance of data pdf conditioned on label 1
@@ -31,7 +30,7 @@ confusion = zeros(3);
 error_p = zeros(3);
 for r=1:3
     for c=1:3
-        confusion(r,c) = length(find(decision==r & L==c)) % confusion matrix where the decision is r and the true lable is c
+        confusion(r,c) = length(find(decision==r & L==c)); % confusion matrix where the decision is r and the true lable is c
         error_p(r,c) = confusion(r,c)/record_N(c);
     end
 end
@@ -46,8 +45,8 @@ plot(x(1, find(decision==1 & L==1)),x(2, find(decision==1 & L==1)),'og'); hold o
 plot(x(1,find(decision==2 & L==2)), x(2,find(decision==2 & L==2)),'+g'); hold on,
 plot(x(1,find(decision==3 & L==3)), x(2,find(decision==3 & L==3)),'xg'); hold on,
 plot(x(1,find(decision~=1 & L==1)), x(2,find(decision~=1 & L==1)),'or'); hold on,
-plot(x(1,find(decision~=2 & L==2)), x(2,find(decision~=2 & L==2)),'+r'); hold on,
-plot(x(1,find(decision~=3 & L==3)), x(2,find(decision~=3 & L==3)),'xr'); hold on,
+plot(x(1,find(decision~=2 & L==2)), x(2,find(decision~=2 & L==2)),'+b'); hold on,
+plot(x(1,find(decision~=3 & L==3)), x(2,find(decision~=3 & L==3)),'xy'); hold on,
 axis equal,
 
 % including the contour at level 0 which is the decision boundary
