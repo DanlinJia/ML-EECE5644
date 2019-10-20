@@ -9,12 +9,11 @@ hv = [h(:)';v(:)'];
 r=rand();
 pair(1) = r*cos(2*pi*rand());
 pair(2) = r*sin(2*pi*rand());
-%     pair(1) = cos(pi/4);
-%     pair(2) = sin(pi/4);
-for i=1:9
-    r=rand()
-    pair(1) = r*cos(2*pi*rand());
-    pair(2) = r*sin(2*pi*rand());
+r=rand()
+pair(1) = r*cos(2*pi*rand());
+pair(2) = r*sin(2*pi*rand());
+
+for i=1:4
     reference=zeros(2,i);
     reference(:) = generateDataOnCircle(i);
     sumi=0;
@@ -27,7 +26,7 @@ for i=1:9
         M =zeros(1,b);
         E = zeros(1,b);
         for v= 1:b
-            M(:,v) = (ri - norm(hv(:,v)-reference(:,k)))^2/sigma^2;  
+            M(:,v) = (norm(hv(:,v)-reference(:,k)) - dTi)^2/sigma^2;  
         end
         sumi = sumi+M;
     end
@@ -37,9 +36,9 @@ for i=1:9
     map = sumi + E;
     minDSGV = -2;
     maxDSGV = 2;
-    mapGrid = reshape(sumi,91,101);
-    subplot(3,3,i), 
-    contour(horizontalGrid,verticalGrid,-mapGrid,30); hold on,
+    mapGrid = reshape(map,91,101);
+    subplot(2,2,i), 
+    contour(horizontalGrid,verticalGrid,-mapGrid,100); hold on,
     plot(pair(1), pair(2), 'gx');hold on,
     plot(reference(1,:), reference(2,:), 'ro');
     legend("Contour",'TruePoint','Reference'), 
