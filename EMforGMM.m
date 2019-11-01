@@ -15,41 +15,41 @@ Sigma_true(:,:,3) = [4 1;1 16];
 Sigma_true(:,:,4) = [15 4;4 8];
 x = randGMM(N,alpha_true,mu_true,Sigma_true);
 [d,M] = size(mu_true); % determine dimensionality of samples and number of GMM components
-dataset=zeros(K,N/K,d);
+dataset=zeros(K,d,N/K);
 for i=1:K
-    min=(N/K)*(i-1);
-    max=i*N/K;
-    dataset(i,:,:)=x(:,(min:max));
+    min_bound=(N/K)*(i-1)+1;
+    max_bound=i*N/K;
+    dataset(i,:,:)=x(:,min_bound:max_bound);
 end
 
-for M=1:6
+bic=zeros(K,6);
+for M=1:6 
     for kford=1:K
-        x_test=dataset(kford,:);
-        x_tmp = x;
-        x_tmp(kford, :)=[];
-        x_train = reshape(x_tmp,[1,N-N/K]);
-        bic=zeros(1,M);
+        x_test=reshape(dataset(kford,:,:),[d,N/K]);
+        x_tmp = dataset;
+        x_tmp(kford,:,:)=[];
+        x_train = reshape(x_tmp,[d,N-N/K]);
         % Initialize the GMM to randomly selected samples
         alpha = ones(1,M)/M;
-        shuffledIndices = randperm(N);
-        mu = x(:,shuffledIndices(1:M)); % pick M random samples as initial mean estimates
-        [~,assignedCentroidLabels] = min(pdist2(mu',x'),[],1); % assign each sample to the nearest mean
+        shuffledIndices = randperm(N-N/K);
+        mu = x_train(:,shuffledIndices(1:M)); % pick M random samples as initial mean estimates
+        %assignedCentroidLabels = min(pdist2(mu',x_train'),[],1); % assign each sample to the nearest mean
         for m = 1:M % use sample covariances of initial assignments as initial covariance estimates
-            Sigma(:,:,m) = cov(x(:,find(assignedCentroidLabels==m))') + regWeight*eye(d,d);
+            Sigma(:,:,m) = eye(2);
         end
         t = 0; %displayProgress(t,x,alpha,mu,Sigma);
         Converged = 0; % Not converged at the beginning
         %while ~Converged
         for i=1:100
             for l = 1:M
-                temp(l,:) = repmat(alpha(l),1,N).*evalGaussian(x,mu(:,l),Sigma(:,:,l));
+                temp(l,:) = repmat(alpha(l),1,N-N/K).*evalGaussian(x_train,mu(:,l),Sigma(:,:,l));
             end
             plgivenx = temp./sum(temp,1);
             alphaNew = mean(plgivenx,2);
-            w = plgivenx./repmat(sum(plgivenx,2),1,N);
-            muNew = x*w';
+            w = plgivenx./repmat(sum(plgivenx,2),1,N-N/K);
+            muNew = x_train*w';
             for l = 1:M
-                v = x-repmat(muNew(:,l),1,N);
+                v = x_train-repmat(muNew(:,l),1,N-N/K);
                 u = repmat(w(l,:),d,1).*v;
                 SigmaNew(:,:,l) = u*v' + regWeight*eye(d,d); % adding a small regularization term
             end
@@ -65,10 +65,11 @@ for M=1:6
             end
         end
         p=(d+d^2)*M;        % number of parameters
-        bic(M)=log(N)*p-2*log(sum(log(evalGMM(x,alpha,mu,Sigma))));   
+        %bic(kford,M)=log(N-N/K)*p-2*sum(evalGMM(x_test,alpha,mu,Sigma)); 
+        bic(kford,M)=K*d-2*sum(log(evalGMM(x_test,alpha,mu,Sigma)));
     end
-    figure(1),plot(1:M,bic(M),'b.');
 end
+figure(1),plot(1:6,mean(bic,1,'omitnan'));
 %%%
 function displayProgress(t,x,alpha,mu,Sigma)
 figure(1),
