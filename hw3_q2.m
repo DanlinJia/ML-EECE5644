@@ -1,14 +1,68 @@
 N=999;
-alpha_true = [0.3,0.7];
-mu_true = [8 10 ;-10 0];
-Sigma_true(:,:,1) = [4 5;8 12];
-Sigma_true(:,:,2) = [12 2;4 20];
-x = randGMM(N,alpha_true,mu_true,Sigma_true);
+p = [0.3,0.7];
+mu = [8 10 ;-10 0];
+Sigma(:,:,1) = [8 5;7 12];
+Sigma(:,:,2) = [13 2;4 7];
+x = randGMM(N,p,mu,Sigma);
 
-x_1=x(:,:,find(x(:,:,:)==1));
-figure(1), plot(x(1,:),x(2,:),'b.');
+x_1=x(1:2,find(x(3,:,:)==1));
+x_2=x(1:2,find(x(3,:,:)==2));
+figure(1), plot(x_1(1,:),x_1(2,:),'bo'), hold on; plot(x_2(1,:),x_2(2,:),'r*'), title("Data with True label");
+xlabel("x1"),ylabel("x2");
+legend("class 1","class 2");
 
+y_label=labelData(x,mu,Sigma);
+x_temp=x;
+x_temp(3,:)=1;
+model = @(w)sum(log(1+exp(w*x_temp)));   % w = [w1 w2 b]
+w0 = [0.1678 -0.9858 4.7613];
+[w,mval] = fminsearch(model,w0);
+b=w(3);
+w=w(1:2);
+y_true=(1+exp(w*x(1:2,:)+b)).^(-1);
 
+%e = fisherLDA(x_1,x_2,mu,Sigma);
+
+function f = fisherLDA(x_1,x_2,mu,Sigma)
+Sb = (mu(:,1)-mu(:,2))*(mu(:,1)-mu(:,2))';
+Sw = Sigma(:,:,1) + Sigma(:,:,2);
+[V,D] = eig(inv(Sw)*Sb);
+[~,ind] = sort(diag(D),'descend');
+w = V(:,ind(1)); % Fisher LDA projection vector
+c=w'*0.5*(mu(:,1)-mu(:,2));
+y_1 = w'*x_1;
+y_2 = w'*x_2;
+ind00=find(y_1>c);
+ind11=find(y_2<c);
+ind10=find(y_1<=c);
+ind01=find(y_2>=c);
+figure(2),
+plot(y_1(1,ind00),zeros(1,length(ind00)),'g.');
+hold on;
+plot(y_1(1,ind10),zeros(1,length(ind10)),'bo');
+hold on;
+plot(y_2(1,ind11),zeros(1,length(ind11)),'g.');
+hold on;
+plot(y_2(1,ind01),zeros(1,length(ind01)),'r*');
+f=length(ind10)+length(01);
+xlabel("Data Projection"), title(sprintf("Fisher LDA (error:%d)",f));
+legend("true class 1","false class 1","true class 2", "false class 2");
+end
+
+function y=labelData(x,mu,sigma)
+[~,s]=size(x);
+y=zeros(2,s);
+for class=1:s
+    if x(3,class)==1
+        y(1,class)=evalGaussian(x(1:2,class),mu(:,1),sigma(:,:,1));
+        y(2,class)=1;
+    else
+        y(1,class)=1-evalGaussian(x(1:2,class),mu(:,2),sigma(:,:,2));
+        y(2,class)=2;
+    end
+end
+end
+    
 function x = randGMM(N,alpha,mu,Sigma)
 d = size(mu,1); % dimensionality of samples
 cum_alpha = [0,cumsum(alpha)];
@@ -16,10 +70,9 @@ u = rand(1,N); x = zeros(d+1,N); labels = zeros(1,N);
 for m = 1:length(alpha)
     ind = find(cum_alpha(m)<u & u<=cum_alpha(m+1)); 
     x(1:d,ind) = randGaussian(length(ind),mu(:,m),Sigma(:,:,m));
-    labels(ind) = 1;
-    ind
+    labels(ind) = m;
 end
-x(d+1,:) = labels;
+x(d+1,:)=labels;
 end
 
 function x = randGaussian(N,mu,Sigma)
