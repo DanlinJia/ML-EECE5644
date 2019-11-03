@@ -1,6 +1,6 @@
 N=999;
 p = [0.3,0.7];
-mu = [8 10 ;-10 0];
+mu = [18 0 ;-10 0];
 Sigma(:,:,1) = [8 5;7 12];
 Sigma(:,:,2) = [13 2;4 7];
 x = randGMM(N,p,mu,Sigma);
@@ -11,6 +11,13 @@ figure(1), plot(x_1(1,:),x_1(2,:),'bo'), hold on; plot(x_2(1,:),x_2(2,:),'r*'), 
 xlabel("x1"),ylabel("x2");
 legend("class 1","class 2");
 
+
+%e = map(x,mu,Sigma,p);
+e2 = fisherLDA(x_1,x_2,mu,Sigma);
+e3 = logsticLearning(x,mu,Sigma);
+
+
+function f = logsticLearning(x,mu,Sigma)
 y_label=labelData(x,mu,Sigma);
 x_temp=x;
 x_temp(3,:)=1;
@@ -19,9 +26,52 @@ w0 = [0.1678 -0.9858 4.7613];
 [w,mval] = fminsearch(model,w0);
 b=w(3);
 w=w(1:2);
-y_true=(1+exp(w*x(1:2,:)+b)).^(-1);
+y_true=(1+exp(w*x(1:2,:))).^(-1);
+y_true(1,:)=y_true;
+y_true(2,:)=(y_true(1,:)<0.5)+1;
+f = length(find(y_label(2,:)~=y_true(2,:)));
+ind11=find(and(y_label(2,:)==y_true(2,:),  y_label(2,:)==2 ));
+ind10=find(and(y_label(2,:)~=y_true(2,:),  y_label(2,:)==2 ));
+ind00=find(and(y_label(2,:)==y_true(2,:), y_label(2,:)==1 ));
+ind01=find(and(y_label(2,:)~=y_true(2,:), y_label(2,:)==1 ));
+figure(4), % class 0 circle, class 1 +, correct green, incorrect red
+plot(x(1,ind00),x(2,ind00),'og'); hold on,
+plot(x(1,ind10),x(2,ind10),'or'); hold on,
+plot(x(1,ind01),x(2,ind01),'+r'); hold on,
+plot(x(1,ind11),x(2,ind11),'+g'); hold on,
+axis equal,
 
+% including the contour at level 0 which is the decision boundary
+legend('True Class 1','False Class 2','False Class 1','True Class 2' ), 
+title(sprintf('Linear Logistic Learning (error:%d)',f)),
+xlabel('x_1'), ylabel('x_2');
+end
 %e = fisherLDA(x_1,x_2,mu,Sigma);
+
+function f=map(x,mu,Sigma,p)
+lambda = [0 1;1 0]; % loss values
+gamma = (lambda(2,1)-lambda(1,1))/(lambda(1,2)-lambda(2,2)) * p(1)/p(2); %threshold
+discriminantScore = log(evalGaussian(x(1:2,:),mu(:,2),Sigma(:,:,2)))-log(evalGaussian(x(1:2,:),mu(:,1),Sigma(:,:,1)));% - log(gamma);
+decision = (discriminantScore >= log(gamma));
+
+ind00 = find(decision==0 & x(3,:)==1);
+ind10 = find(decision==1 & x(3,:)==1); 
+ind01 = find(decision==0 & x(3,:)==2); 
+ind11 = find(decision==1 & x(3,:)==2); 
+
+f = length(ind01)+length(ind10);
+figure(2), % class 0 circle, class 1 +, correct green, incorrect red
+plot(x(1,ind00),x(2,ind00),'og'); hold on,
+plot(x(1,ind10),x(2,ind10),'or'); hold on,
+plot(x(1,ind01),x(2,ind01),'+r'); hold on,
+plot(x(1,ind11),x(2,ind11),'+g'); hold on,
+axis equal,
+
+% including the contour at level 0 which is the decision boundary
+legend('True Class 1','False Class 1','False Class 2','True Class 2' ), 
+title(sprintf('MAP (error:%d)',f)),
+xlabel('x_1'), ylabel('x_2');
+end
 
 function f = fisherLDA(x_1,x_2,mu,Sigma)
 Sb = (mu(:,1)-mu(:,2))*(mu(:,1)-mu(:,2))';
@@ -30,13 +80,14 @@ Sw = Sigma(:,:,1) + Sigma(:,:,2);
 [~,ind] = sort(diag(D),'descend');
 w = V(:,ind(1)); % Fisher LDA projection vector
 c=w'*0.5*(mu(:,1)-mu(:,2));
+c
 y_1 = w'*x_1;
 y_2 = w'*x_2;
 ind00=find(y_1>c);
 ind11=find(y_2<c);
 ind10=find(y_1<=c);
 ind01=find(y_2>=c);
-figure(2),
+figure(3),
 plot(y_1(1,ind00),zeros(1,length(ind00)),'g.');
 hold on;
 plot(y_1(1,ind10),zeros(1,length(ind10)),'bo');
@@ -44,7 +95,7 @@ hold on;
 plot(y_2(1,ind11),zeros(1,length(ind11)),'g.');
 hold on;
 plot(y_2(1,ind01),zeros(1,length(ind01)),'r*');
-f=length(ind10)+length(01);
+f=length(ind10)+length(ind01);
 xlabel("Data Projection"), title(sprintf("Fisher LDA (error:%d)",f));
 legend("true class 1","false class 1","true class 2", "false class 2");
 end
@@ -83,12 +134,6 @@ A = Sigma^(1/2);
 x = A*z + repmat(mu,1,N);
 end
 
-function gmm = evalGMM(x,alpha,mu,Sigma)
-gmm = zeros(1,size(x,2));
-for m = 1:length(alpha) % evaluate the GMM on the grid
-    gmm = gmm + alpha(m)*evalGaussian(x,mu(:,m),Sigma(:,:,m));
-end
-end
 
 %%%
 function g = evalGaussian(x,mu,Sigma)
