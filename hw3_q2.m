@@ -13,31 +13,31 @@ legend("class 1","class 2");
 
 e = map(x,mu,Sigma,p);
 e2 = fisherLDA(x_1,x_2,mu,Sigma);
-e3 = logsticLearning(x,mu,Sigma);
+e3 = logsticLearning(x_1,x_2,x);
 
 
-function f = logsticLearning(x,mu,Sigma)
-y_label=labelData(x,mu,Sigma)
-x_temp=x;
-x_temp(3,:)=1;
-model = @(w)sum(-log((1+exp(w*x_temp)).^-1));   % w = [w1 w2 b]
-w0 = [-0.5578 -0.83 -6];
+function f = logsticLearning(x_1,x_2,x)
+x_temp1=x_1;
+x_temp1(3,:)=1;
+x_temp2=x_2;
+x_temp2(3,:)=1;
+model = @(w)sum(-log((1+exp(w*x_temp1)).^-1))+sum(-log(1-(1+exp(w*x_temp2)).^-1));   % w = [w1 w2 b]
+w0 = [1 2 3];
 [w,mval] = fminsearch(model,w0);
 b=w(3);
 w=w(1:2);
-y_true=1-(1+exp(w*x(1:2,:)+b)).^(-1);
-y_true(1,:)=y_true;
-y_true(2,:)=(y_true(1,:)<0.5)+1;
-f = length(find(y_label(2,:)~=y_true(2,:)));
-ind11=find(and(y_label(2,:)==y_true(2,:),  y_label(2,:)==2 ));
-ind10=find(and(y_label(2,:)~=y_true(2,:),  y_label(2,:)==2 ));
-ind00=find(and(y_label(2,:)==y_true(2,:), y_label(2,:)==1 ));
-ind01=find(and(y_label(2,:)~=y_true(2,:), y_label(2,:)==1 ));
+y_true1=(1+exp(w*x_1+b)).^(-1);
+y_true2=(1+exp(w*x_2+b)).^(-1);
+ind11=find(y_true1>0.5);
+ind10=find(y_true1<=0.5);
+ind00=find(y_true2<0.5);
+ind01=find(y_true2>=0.5);
+f=length(ind10)+length(ind01);
 figure(4), % class 0 circle, class 1 +, correct green, incorrect red
-plot(x(1,ind00),x(2,ind00),'og'); hold on,
+plot(x(1,ind00),x(2,ind00),'.g'); hold on,
 plot(x(1,ind01),x(2,ind01),'or'); hold on,
 plot(x(1,ind10),x(2,ind10),'+r'); hold on,
-plot(x(1,ind11),x(2,ind11),'+g'); 
+plot(x(1,ind11),x(2,ind11),'.g'); 
 axis equal,
 
 % including the contour at level 0 which is the decision boundary
