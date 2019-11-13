@@ -18,10 +18,10 @@ for i=1:N
     end
 end
 
-% ind0=find(label==-1);
-% ind1=find(label==1);
-% figure(1),plot(x(1,ind0),x(2,ind0),'ro'),hold on,
-% plot(x(1,ind1),x(2,ind1),'gx');
+ ind0=find(label==-1);
+ ind1=find(label==1);
+ figure(4),plot(x(1,ind0),x(2,ind0),'ro'),hold on,
+ plot(x(1,ind1),x(2,ind1),'gx');
 
 
 % Train a Linear kernel SVM with cross-validation
@@ -61,7 +61,7 @@ title('Linear-SVM Cross-Val Accuracy Estimate'), %axis equal,
 
 [dummy,indi] = max(PCorrect(:)); [indBestC, indBestSigma] = ind2sub(size(PCorrect),indi);
 CBest= CList(indBestC); 
-SVMBest = fitcsvm(x',y,'BoxConstraint',C,'KernelFunction','linear');
+SVMBest = fitcsvm(x',y,'BoxConstraint',CBest,'KernelFunction','linear');
 d = SVMBest.predict(x')'; % Labels of training data using the trained SVM
 indINCORRECT = find(y.*d == -1); % Find training samples that are incorrectly classified by the trained SVM
 indCORRECT = find(y.*d == 1); % Find training samples that are correctly classified by the trained SVM
@@ -87,12 +87,11 @@ for i=1:N
 end
 
 
-
-SVMBest_test = fitcsvm(x_test',y_test,'BoxConstraint',C,'KernelFunction','linear');
+SVMBest_test = fitcsvm(x_test',y_test,'BoxConstraint',CBest,'KernelFunction','linear');
 d = SVMBest_test.predict(x_test')'; % Labels of training data using the trained SVM
 indINCORRECT_test = find(y_test.*d == -1); % Find training samples that are incorrectly classified by the trained SVM
 indCORRECT_test = find(y_test.*d == 1); % Find training samples that are correctly classified by the trained SVM
-figure(2),
+figure(3),
 plot(x(1,indCORRECT_test),x(2,indCORRECT_test),'g.'), hold on,
 plot(x(1,indINCORRECT_test),x(2,indINCORRECT_test),'r.'), axis equal,
 title('Test Data (RED: Incorrectly Classified)');
