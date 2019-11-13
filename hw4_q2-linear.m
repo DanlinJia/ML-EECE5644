@@ -46,8 +46,8 @@ for CCounter = 1:length(CList)
         end
         % using all other folds as training set
         xTrain = x(:,indTrain); lTrain = y(indTrain);
-        %SVMk = fitcsvm(xTrain',lTrain,'BoxConstraint',C,'KernelFunction','linear');
-        SVMk = fitcsvm(x',y,'BoxConstraint',C,'KernelFunction','linear','KernelScale',sigma);
+        SVMk = fitcsvm(xTrain',lTrain,'BoxConstraint',C,'KernelFunction','linear');
+        %SVMk = fitcsvm(x',y,'BoxConstraint',C,'KernelFunction','linear');
         dValidate = SVMk.predict(xValidate')'; % Labels of validation data using the trained SVM
         indCORRECT = find(yValidate.*dValidate == 1); 
         Ncorrect(k)=length(indCORRECT);
@@ -61,7 +61,7 @@ title('Linear-SVM Cross-Val Accuracy Estimate'), %axis equal,
 
 [dummy,indi] = max(PCorrect(:)); [indBestC, indBestSigma] = ind2sub(size(PCorrect),indi);
 CBest= CList(indBestC); 
-SVMBest = fitcsvm(x',y,'BoxConstraint',C,'KernelFunction','linear','KernelScale',sigma);
+SVMBest = fitcsvm(x',y,'BoxConstraint',C,'KernelFunction','linear');
 d = SVMBest.predict(x')'; % Labels of training data using the trained SVM
 indINCORRECT = find(y.*d == -1); % Find training samples that are incorrectly classified by the trained SVM
 indCORRECT = find(y.*d == 1); % Find training samples that are correctly classified by the trained SVM
@@ -88,7 +88,7 @@ end
 
 
 
-SVMBest_test = fitcsvm(x_test',y_test,'BoxConstraint',C,'KernelFunction','linear','KernelScale',sigma);
+SVMBest_test = fitcsvm(x_test',y_test,'BoxConstraint',C,'KernelFunction','linear');
 d = SVMBest_test.predict(x_test')'; % Labels of training data using the trained SVM
 indINCORRECT_test = find(y_test.*d == -1); % Find training samples that are incorrectly classified by the trained SVM
 indCORRECT_test = find(y_test.*d == 1); % Find training samples that are correctly classified by the trained SVM
